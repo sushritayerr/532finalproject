@@ -25,7 +25,3 @@ def clean_dataset(ds):
 
     # create csv file for filtered dataset
     filtered_dataset.to_csv('filtered_twitter_training.csv', index=False)
-
-#uncomment if you want to test this file alone
-# clean_dataset('twitter_training.csv')
-

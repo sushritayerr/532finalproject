@@ -1,4 +1,6 @@
 from kafka.admin import KafkaAdminClient, NewTopic
+from kafka.errors import TopicAlreadyExistsError
+
 
 def create_company_topics():
     admin_client = KafkaAdminClient(
@@ -10,4 +12,8 @@ def create_company_topics():
     companies = ["Verizon", "Microsoft", "Google", "Nvidia", "Facebook"]
     for company in companies:
         topic_list.append(NewTopic(name=company, num_partitions=1, replication_factor=1))
-    admin_client.create_topics(new_topics=topic_list, validate_only=False)
+
+    try:
+        admin_client.create_topics(new_topics=topic_list, validate_only=False)
+    except TopicAlreadyExistsError as e:
+        return

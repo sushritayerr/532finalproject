@@ -13,7 +13,7 @@ spark = SparkSession.builder \
 # Define the Kafka parameters
 kafka_params = {
     "kafka.bootstrap.servers": "localhost:9092",  # Kafka broker(s)
-    "subscribe": "Google_Tweet",              # Kafka topic to subscribe to
+    "subscribe": "Google_Tweet, Verizon, Microsoft, Nvidia, Facebook",              # Kafka topic to subscribe to
     "startingOffsets": "earliest"               # Start reading from the beginning of the topic
 }
 
