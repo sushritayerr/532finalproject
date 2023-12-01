@@ -1,6 +1,11 @@
 from pyspark.sql import SparkSession
 import os
 import json
+from transformers import pipeline
+# from transformers import BertTokenizer, TFBertForSequenceClassification
+# from pyspark.sql.functions import col, expr, udf
+from pyspark.sql.types import StringType
+import tensorflow as tf
 
 # Initialize an empty list to collect JSON objects
 output_data = []
@@ -27,7 +32,9 @@ def subscribe_event():
         .format("kafka") \
         .options(**kafka_params) \
         .load()
-
+    print('schema is')
+    df.printSchema()
+    print('schema end')
     # Perform processing on the received data
     # For example, you can display the Kafka messages
     query = df.selectExpr("CAST(value AS STRING)").writeStream \
@@ -35,13 +42,38 @@ def subscribe_event():
         .foreach(process_row) \
         .start()
 
+    ##test
+    # analyze_sentiment_udf = udf(analyze_sentiment, StringType())
+    # analyzed_tweets_df = df.withColumn("sentiment", analyze_sentiment_udf("tweet"))
+
+
+    ##test
     # Start the Spark streaming query
+    print('output_data is ', output_data)
     query.awaitTermination()
-    # query.stop()
+    query.stop()
+
+# def analyze_sentiment(tweet_text):
+#     sentiment_analysis = pipeline("sentiment-analysis", model="nlptown/bert-base-multilingual-uncased-sentiment")
+#     result = sentiment_analysis(tweet_text)
+#     return result[0]['label']
 
 def process_row(row):
-    value_str = row["value"].cast("string")
+    print('row is ', row)
+    value_str = row["value"]
     json_obj = json.loads(value_str)
-    output_data.append(json_obj)
+    tweet_content = json_obj.get("tweet", "")
+    company_name = json_obj.get("company", "")
+
+    sentiment_analysis = pipeline("sentiment-analysis")
+    result = sentiment_analysis(tweet_content)
+
+    # tokenizer = BertTokenizer.from_pretrained("nlptown/bert-base-multilingual-uncased-sentiment")
+    # model = TFBertForSequenceClassification.from_pretrained("nlptown/bert-base-multilingual-uncased-sentiment")
+
+    # Example of using the model for sentiment analysis
+    # inputs = tokenizer(tweet_content, return_tensors="tf")
+    # outputs = model(sentiment_analysis)
+    output_data.append(company_name + ' ' + result)
 
 subscribe_event()
