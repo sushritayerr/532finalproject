@@ -2,13 +2,11 @@ from pyspark.sql import SparkSession
 import os
 import json
 from transformers import pipeline
-# from transformers import BertTokenizer, TFBertForSequenceClassification
-# from pyspark.sql.functions import col, expr, udf
-from pyspark.sql.types import StringType
-import tensorflow as tf
 
 # Initialize an empty list to collect JSON objects
-output_data = []
+output_data = {"google": {"pos": 0, "neg": 0, "neutral": 0}, "verizon": {"pos": 0, "neg": 0, "neutral": 0},
+               "microsoft": {"pos": 0, "neg": 0, "neutral": 0}, "nvidia": {"pos": 0, "neg": 0, "neutral": 0},
+               "facebook": {"pos": 0, "neg": 0, "neutral": 0}}
 
 def subscribe_event():
     # Initialize a Spark session
@@ -35,6 +33,7 @@ def subscribe_event():
     print('schema is')
     df.printSchema()
     print('schema end')
+
     # Perform processing on the received data
     # For example, you can display the Kafka messages
     query = df.selectExpr("CAST(value AS STRING)").writeStream \
@@ -42,21 +41,10 @@ def subscribe_event():
         .foreach(process_row) \
         .start()
 
-    ##test
-    # analyze_sentiment_udf = udf(analyze_sentiment, StringType())
-    # analyzed_tweets_df = df.withColumn("sentiment", analyze_sentiment_udf("tweet"))
-
-
-    ##test
     # Start the Spark streaming query
-    print('output_data is ', output_data)
     query.awaitTermination()
     query.stop()
 
-# def analyze_sentiment(tweet_text):
-#     sentiment_analysis = pipeline("sentiment-analysis", model="nlptown/bert-base-multilingual-uncased-sentiment")
-#     result = sentiment_analysis(tweet_text)
-#     return result[0]['label']
 
 def process_row(row):
     print('row is ', row)
@@ -65,15 +53,19 @@ def process_row(row):
     tweet_content = json_obj.get("tweet", "")
     company_name = json_obj.get("company", "")
 
-    sentiment_analysis = pipeline("sentiment-analysis")
-    result = sentiment_analysis(tweet_content)
+    # pretrained sentiment analysis model - https://huggingface.co/cardiffnlp/twitter-roberta-base-sentiment-latest
+    sentiment_analysis = pipeline("sentiment-analysis", model="cardiffnlp/twitter-roberta-base-sentiment-latest")
+    result = sentiment_analysis(tweet_content)[0]['label']
 
-    # tokenizer = BertTokenizer.from_pretrained("nlptown/bert-base-multilingual-uncased-sentiment")
-    # model = TFBertForSequenceClassification.from_pretrained("nlptown/bert-base-multilingual-uncased-sentiment")
+    print(result)
+    company = output_data[company_name.lower()]
+    if result == "positive":
+        company["pos"] = company["pos"] + 1
+    elif result == "negative":
+        company["neg"] = company["neg"] + 1
+    if result == "neutral":
+        company["neutral"] = company["neutral"] + 1
+    print(output_data)
 
-    # Example of using the model for sentiment analysis
-    # inputs = tokenizer(tweet_content, return_tensors="tf")
-    # outputs = model(sentiment_analysis)
-    output_data.append(company_name + ' ' + result)
 
 subscribe_event()
