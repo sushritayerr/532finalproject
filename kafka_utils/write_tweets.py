@@ -14,7 +14,7 @@ def write_tweets(ds):
 
         data = {
             'tweet': tweet,
-            'sentiment': sentiment
+            'company': company_name
         }
         serialized_data = json.dumps(data).encode('utf-8')
         producer.send(company_name, value=serialized_data)
