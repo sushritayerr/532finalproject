@@ -14,22 +14,6 @@ def preprocess_text(text):
     text = ' '.join([word for word in text.split() if word not in custom_stopwords])
     return text
 
-def update_tweets(topic, bootstrap_servers='localhost:9092'):
-    consumer = KafkaConsumer(topic, bootstrap_servers=bootstrap_servers,
-                             auto_offset_reset='earliest', group_id='update_tweets_group')
-
-    producer = KafkaProducer(bootstrap_servers=bootstrap_servers)
-
-    for message in consumer:
-        tweet = message.value.decode('utf-8')
-        updated_tweet = preprocess_text(tweet)
-
-        
-        updated_topic = f"{topic}_updated"
-        producer.send(updated_topic, updated_tweet.encode('utf-8'))
-        print(f"Original Tweet ({topic}): {tweet}")
-        print(f"Updated Tweet ({updated_topic}): {updated_tweet}")
-        print("-----")
 
 if __name__ == "__main__":
     
