@@ -68,4 +68,4 @@ def process_row(row):
     print(output_data)
 
 
-subscribe_event()
+# subscribe_event()
