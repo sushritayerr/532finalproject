@@ -14,9 +14,6 @@ def clean_dataset(ds):
     filtered_dataset = dataset[~dataset['company'].isin(companies_to_be_removed)]
     filtered_dataset = filtered_dataset[~filtered_dataset['sentiment'].isin(['Irrelevant'])]
 
-    distinct_sentiment = filtered_dataset['sentiment'].unique()
-    print(distinct_sentiment)
-
     # remove id column
     filtered_dataset = filtered_dataset.drop('id', axis=1)
 
@@ -30,6 +27,4 @@ def clean_dataset(ds):
     # create csv file for filtered dataset
     filtered_dataset.to_csv('filtered_twitter_training.csv', index=False)
 
-
-clean_dataset("twitter_training.csv")
 
