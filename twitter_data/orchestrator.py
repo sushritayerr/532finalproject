@@ -14,8 +14,8 @@ create_topic.create_company_topics()
 filter_dataset.clean_dataset("twitter_training.csv")
 
 companies_for_analysis = ["Verizon", "Microsoft", "Google", "Nvidia", "Facebook"]
-# for company in companies_for_analysis:
-#     test_tweet_ingestion.read_tweets(company)
+
+# todo - preprocess tweets from dataset
 
 # writing tweets and publishing event
 write_tweets.write_tweets('filtered_twitter_training.csv')
