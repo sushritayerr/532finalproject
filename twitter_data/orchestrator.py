@@ -15,8 +15,6 @@ filter_dataset.clean_dataset("twitter_training.csv")
 
 companies_for_analysis = ["Verizon", "Microsoft", "Google", "Nvidia", "Facebook"]
 
-# todo - preprocess tweets from dataset
-
 # writing tweets and publishing event
 write_tweets.write_tweets('filtered_twitter_training.csv')
 

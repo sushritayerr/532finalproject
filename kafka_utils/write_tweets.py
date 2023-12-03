@@ -2,6 +2,8 @@ from kafka import KafkaProducer, KafkaConsumer
 import pandas as pd
 import json
 import argparse
+from kafka_utils.preprocess import preprocess_text
+
 
 def write_tweets(ds):
     producer = KafkaProducer(bootstrap_servers='localhost:9092')
@@ -12,12 +14,17 @@ def write_tweets(ds):
         tweet = row['tweet']
         sentiment = row['sentiment']
 
-        data = {
-            'tweet': tweet,
-            'company': company_name
-        }
-        serialized_data = json.dumps(data).encode('utf-8')
-        producer.send(company_name, value=serialized_data)
+        # preprocess tweets from dataset
+        if type(tweet) == str:
+            tweet = preprocess_text(tweet)
+
+            data = {
+                'tweet': tweet,
+                'company': company_name
+            }
+            serialized_data = json.dumps(data).encode('utf-8')
+            producer.send(company_name, value=serialized_data)
+            print("publishing --> ", data)
 
     producer.close()
 
