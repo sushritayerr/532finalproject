@@ -85,3 +85,29 @@ The following tools and technologies will be used in this project:
     - sending tweets to sentiment analysis model - spark consumer
     - Aggregating the results and printing them - spark consumer
 
+   ## Experiments
+   
+   *** Experiment 1:
+   Studying the performance using a vanilla processing of the entire dataset(pretrained_model.py) and using a distributed setup, using Spark and Kafka. We observed(as expected) that the distributed processing was faster than the vanilla processing.
+
+   *** Experiment 2:
+   Studying the performance of the system by varying the number of cores at disposal of Spark for distributed processing. We observed that, as the number of cores are increased the throughput of the system increased due to the increased parallelism. As a result, overall, the duration for processing decreased with increase in the number of cores.
+
+   *** Experiment 3:
+   Studying the performance of the system by varying the memory available to the spark instance. We observed that increasing the memory improved the performance slightly but not in correlation with increasing the number of cores.
+
+   ## Test cases
+
+   *** Correctness test:
+   We have verified the correctness of the system using the pretrained_model.py to compare the output and to verify if the aggregation is correct.
+
+   *** Integration test:
+   ** Verifying Kafka:
+   We have verified the tweets reading, filtering and writing to the kafka topics using a custom kafka consumer script(test_tweet_ingestion.py) that verified the tweets from the custom dataset we have prepared to validate.
+
+   ** Verifying Spark + Kafka Integration
+   We have used the same kafka consumer script to compare the spark integration and validate if the data is being read correctly.
+
+   ** Complete test
+   Using the custom dataset, we have validated if the final aggregated results are matching the input provided. The dataset includes tweets that dont belong to the companies in question, different preprocessing requirements and tweets of different sentiments.
+
