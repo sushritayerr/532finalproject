@@ -9,11 +9,7 @@ sys.path.append(os.path.dirname(SCRIPT_DIR))
 import json
 from transformers import pipeline
 
-# Initialize an empty list to collect JSON objects
-output_data = {"google": {"pos": 0, "neg": 0, "neutral": 0}, "verizon": {"pos": 0, "neg": 0, "neutral": 0},
-               "microsoft": {"pos": 0, "neg": 0, "neutral": 0}, "nvidia": {"pos": 0, "neg": 0, "neutral": 0},
-               "facebook": {"pos": 0, "neg": 0, "neutral": 0}}
-
+#Accumulator to aggregate the output of all the tasks
 class SentimentAccumulatorParam(AccumulatorParam):
     def zero(self, initialValue):
         return {"pos": 0, "neg": 0, "neutral": 0}
@@ -23,10 +19,10 @@ class SentimentAccumulatorParam(AccumulatorParam):
         v1["neg"] += v2["neg"]
         v1["neutral"] += v2["neutral"]
         return v1
-    # Define the Kafka parameters
+#Kafka parameters
 kafka_params = {
     "kafka.bootstrap.servers": "localhost:9092",  # Kafka broker(s)
-    "subscribe": "Google1",  # Kafka topic to subscribe to
+    "subscribe": "Google, Verizon, Microsoft, Nvidia, Facebook",  # Kafka topics to subscribe to.
     "startingOffsets": "earliest"  # Start reading from the beginning of the topic
 }
 
@@ -41,53 +37,62 @@ spark = SparkSession.builder \
 sentiment_accumulator = spark.sparkContext.accumulator({"pos": 0, "neg": 0, "neutral": 0}, SentimentAccumulatorParam())
 
 def subscribe_event():
-    # Initialize a Spark session
-    
-    # Read data from Kafka
+    #Read the streamed data from kafka
     df = spark.readStream \
         .format("kafka") \
         .options(**kafka_params) \
         .load()
 
-    # Perform processing on the received data
-    # For example, you can display the Kafka messages
+    # Process the tweets using the custom defined method, that performs the sentiment analysis and saves the output using the accumulator
     query = df.selectExpr("CAST(value AS STRING)").writeStream \
         .outputMode("append") \
         .foreach(process_row) \
         .start()
 
-    # Start the Spark streaming query
-    query.awaitTermination(timeout=60)
+    #Waits for 45minutes to complete the execution and then timesout after. Change this value if the number of cores are being increased.
+    query.awaitTermination(timeout=2800)
     query.stop()
 
-
+#Process the row to read the necessary content, perform sentiment analysis and update the results using the accumulator 
 def process_row(row):
     value_str = row["value"]
     json_obj = json.loads(value_str)
     tweet_content = json_obj.get("tweet", "")
     company_name = json_obj.get("company", "")
-    # pretrained sentiment analysis model - https://huggingface.co/cardiffnlp/twitter-roberta-base-sentiment-latest
     sentiment_analysis = pipeline("sentiment-analysis", model="cardiffnlp/twitter-roberta-base-sentiment-latest")
-    print(tweet_content)
+    # print(tweet_content)
     result = sentiment_analysis(tweet_content)[0]['label']
     update_accumulator(company_name, result)
 
-
+#Update the result
 def update_accumulator(company_name, result):
     global sentiment_accumulator
 
-    # Update the accumulator
+    # Update the aggregated result
     sentiment_accumulator.add({"pos": 1 if result == "positive" else 0,
                                "neg": 1 if result == "negative" else 0,
                                "neutral": 1 if result == "neutral" else 0})
 
-    # Print the updated accumulator
-    # print(sentiment_accumulator.value)
 start_time = time.time()
 subscribe_event()
 end_time = time.time()
+#calculating the duration for the processing
 duration = end_time - start_time
 final_value = sentiment_accumulator.value
+#Printing the output of the process
 print("Final Sentiment Analysis Result:", final_value)
 print('Duration is ', duration)
+
+#calculating the final sentiment of the stock
+for company, sentiments in final_value.items():
+    max_sentiment = max(sentiments, key=sentiments.get)
+
+    if max_sentiment == 'pos':
+        summary = f"{company}'s stock is likely to go up in value because the sentiment is positive."
+    elif max_sentiment == 'neg':
+        summary = f"{company}'s stock is likely to go down in value because the sentiment is negative."
+    else:
+        summary = f"{company}'s stock sentiment is neutral."
+
+    print(summary)
 spark.stop()

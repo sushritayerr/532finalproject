@@ -4,7 +4,7 @@ import pandas as pd
 def clean_dataset(ds):
     # read dataset
     dataset = pd.read_csv(ds)
-    # get list of distinct companies
+    # extract list of distinct companies
     distinct_companies = dataset['company'].unique()
     # list of companies used in the project
     companies_for_analysis = ["Verizon", "Microsoft", "Google", "Nvidia", "Facebook"]
@@ -21,8 +21,8 @@ def clean_dataset(ds):
     column_to_move = 'sentiment'
     other_columns = [col for col in filtered_dataset.columns if col != column_to_move]
     filtered_dataset = filtered_dataset[other_columns + [column_to_move]]
-
-    print(filtered_dataset)
+    # filtered_dataset = filtered_dataset[:10]
+    # print(filtered_dataset)
 
     # create csv file for filtered dataset
     filtered_dataset.to_csv('filtered_twitter_training.csv', index=False)

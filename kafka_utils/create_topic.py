@@ -17,3 +17,4 @@ def create_company_topics():
         admin_client.create_topics(new_topics=topic_list, validate_only=False)
     except TopicAlreadyExistsError as e:
         return
+# create_company_topics()

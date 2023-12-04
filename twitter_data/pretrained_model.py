@@ -11,6 +11,7 @@ sentiment_analysis = pipeline("sentiment-analysis", model="cardiffnlp/twitter-ro
 
 n = 0
 correct_predictions = 0
+#Predicts the sentiment and aggregates the data without spark and any parallelism
 for d, s in zip(data['tweet'], data['company']):
     n = n + 1
     print("################## ", n)
