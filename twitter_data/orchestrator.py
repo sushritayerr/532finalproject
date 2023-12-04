@@ -5,9 +5,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 from twitter_data import filter_dataset
 from kafka_utils import write_tweets
-from kafka_utils import test_tweet_ingestion
 from kafka_utils import create_topic
-from twitter_data.spark_consumer import subscribe_event
 
 sys.path.append('.')
 

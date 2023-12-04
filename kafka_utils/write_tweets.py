@@ -23,7 +23,7 @@ def write_tweets(ds):
                 'company': company_name
             }
             serialized_data = json.dumps(data).encode('utf-8')
-            producer.send('Google1', value=serialized_data)
+            producer.send(company_name, value=serialized_data)
             print("publishing --> ", data)
 
     producer.close()
